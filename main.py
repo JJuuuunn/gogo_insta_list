@@ -121,7 +121,7 @@ def fetch_user_data(username: str, L: instaloader.Instaloader, assets_dir: str, 
     return user_info, False
 
 
-def generate_html(users_data: list[dict], sponsors_data: list[dict], total_count: int) -> str:
+def generate_html(developer_data: list[dict], users_data: list[dict], sponsors_data: list[dict], total_count: int) -> str:
     """HTML 컨텐츠를 생성합니다."""
     
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -358,6 +358,12 @@ def generate_html(users_data: list[dict], sponsors_data: list[dict], total_count
             </div>
         </header>
         
+        <!-- 개발자 섹션 -->
+        <h2 class="section-title">👨‍💻 만들어준 사람</h2>
+        <div class="user-list">
+            {create_user_cards(developer_data)}
+        </div>
+        
         <!-- 협찬사 섹션 -->
         <h2 class="section-title">🤝 협찬사 ({len(sponsors_data)})</h2>
         <div class="user-list">
@@ -437,9 +443,14 @@ def main():
         if i < len(target_list) and not is_cached:
             time.sleep(5)
     
+    # 개발자 정보 수집 (하드코딩)
+    print("\n[3] 개발자 정보 수집 중...")
+    dev_info, _ = fetch_user_data('yeoriyeori', L, assets_dir, cache, cache_file)
+    developer_data = [dev_info]
+
     # HTML 생성
     print("\n📝 HTML 파일 생성 중...")
-    html_content = generate_html(users_data, sponsors_data, len(target_list) + len(sponsors_list))
+    html_content = generate_html(developer_data, users_data, sponsors_data, len(target_list) + len(sponsors_list))
     
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
