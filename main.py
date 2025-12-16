@@ -331,6 +331,19 @@ def main():
     # Instaloader 인스턴스 생성 (로그인 없이)
     L = instaloader.Instaloader()
     
+    # 캐시 로드
+    cache_file = "cache.json"
+    cache = {}
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, "r", encoding="utf-8") as f:
+                import json
+                cache = json.load(f)
+            print(f"📦 캐시된 데이터 {len(cache)}개를 로드했습니다.")
+        except Exception:
+            print("⚠️ 캐시 파일 로드 중 오류 발생, 새로 시작합니다.")
+            cache = {}
+
     users_data = []
     
     for i, username in enumerate(target_list, 1):
@@ -342,6 +355,15 @@ def main():
             "full_name": "",
             "is_private": False,
         }
+        
+        # 캐시 확인
+        if username in cache:
+            # 이미지 파일도 실제로 존재하는지 확인
+            img_path = os.path.join(assets_dir, f"{username}.jpg")
+            if os.path.exists(img_path) or cache[username].get('success') is False:
+                 print(f"  └─ 📦 캐시 사용")
+                 users_data.append(cache[username])
+                 continue
         
         try:
             # 프로필 정보 가져오기
@@ -363,7 +385,17 @@ def main():
         except Exception as e:
             print(f"  └─ ❌ 실패: {str(e)[:50]}")
         
+        # 캐시 업데이트 및 저장
         users_data.append(user_info)
+        cache[username] = user_info
+        
+        # 중간 저장 (실행 중단 대비)
+        try:
+            import json
+            with open(cache_file, "w", encoding="utf-8") as f:
+                json.dump(cache, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"  ⚠️ 캐시 저장 실패: {e}")
         
         # Rate limit 방지를 위한 딜레이 (마지막 요청 후에는 불필요)
         if i < len(target_list):
